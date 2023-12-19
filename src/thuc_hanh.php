@@ -279,7 +279,7 @@ if (isset($_POST['btnNopBai'])){
                $numberQuestionCorrect = 0;
    
          
-              // Example for CheckBox type
+              //CheckBox 
               $printedAnswers = []; 
               $selectedAnswersArray = [];
               $correctAnswers = [];
@@ -332,23 +332,22 @@ if (isset($_POST['btnNopBai'])){
                    }
                }
            }
-              //echo "Number of correct answers: $numberQuestionCorrect<br>";
+           
   
-              // Example for Điền type
+              //Điền
               
           foreach ($_POST as $key => $value) {
                if (strpos($key, 'textAnswer') !== false) {
                    $parts = explode('_', $key);
                    $questionNumber = end($parts);
            
-                   // Trim values to remove leading or trailing spaces
+               
                    $questionNumber = trim($questionNumber);
                    $value = trim($value);
 
                    $questionNumber = mysqli_real_escape_string($conn, $questionNumber);
                    $value = mysqli_real_escape_string($conn, $value);
-                    //echo $a;
-                   // Construct the SQL query with proper quoting
+                    
                    $sql = "SELECT *
                            FROM cauhoi 
                            JOIN dapan ON cauhoi.id_cauhoi = dapan.id_cauhoi
@@ -356,29 +355,26 @@ if (isset($_POST['btnNopBai'])){
                                AND dapan.id_cauhoi = $questionNumber 
                                AND dapan.dapan = '" . $value . "'"; 
            
-                   // Execute the query
+                  
                    $result = mysqli_query($conn, $sql);
-                   //echo "Text Answer: $value for question $questionNumber<br>";
-                   // Check for errors in query execution
+              
                    if (!$result) {
                        echo "Loi Error executing query: " . mysqli_error($conn);
                    } else {
-                       // Check if there are matching rows
+                     
                        if (mysqli_num_rows($result) > 0) {
                            $numberQuestionCorrect++;
                        } else {
-                           //echo "Incorrect answer<br>"; // Optional: Display a message for incorrect answers
+                          echo "";
                        }
                    }
-           
-                   //echo "Number of correct answers: $numberQuestionCorrect<br>";
                }
            }
            
       
 
-// Answer truoc Question
-              // Example for Select type
+
+              //  Select
               $selectOptionQuestionArray = [];
               $selectOptionAnswerArray = [];
               $selectOptionUser = [];
@@ -387,24 +383,15 @@ if (isset($_POST['btnNopBai'])){
               $printedAnswersSelect = []; 
               $correctAnswersSelect = [];
               
-
-
-              
-
               foreach ($_POST as $key => $value) {
               
                if (strpos($key, 'selectQuestion') !== false) {
-                   // Handle Select type data for questions
-               //     $value = mysqli_real_escape_string($conn, $value);
                    $parts = explode('_', $key);
 
                    $value = mysqli_real_escape_string($conn, $value);
 
                    $valueQuestion = explode('_', $value);
                
-                  
-                    // print_r($key);
-                    // echo("<br>");
                    $answerselectQuestion = $parts[1];
                   
                    $idQuestionselectQuestion = $parts[1];
@@ -415,19 +402,12 @@ if (isset($_POST['btnNopBai'])){
                  
                    $valueAnswer = explode('_', $value);
                   
-                   // Handle Select type data for answers
-               //     $value = mysqli_real_escape_string($conn, $value);
                    $parts = explode('_', $key);
            
                    $answerselectAnswer = $parts[0];
                    $idQuestionselectAnswer = $parts[1];
                    $idAnswerselectAnswer = $parts[2];
                    
-                   
-               //     echo("Day la answerselectAnswer");
-                 
-               //     echo($value);
-
                }
 
               
@@ -449,32 +429,15 @@ if (isset($_POST['btnNopBai'])){
                           $correctAnswersSelect[$row['id_cauhoi']][$row['id_dapan']] = $row['dapan'];
                       }
                       
-                   
-                   
                     
                 }
-              
-            
                        }
-                        
-                  
-
-              
-               
                if (isset($idAnswerselectQuestion, $idAnswerselectAnswer) && $idAnswerselectQuestion == $idAnswerselectAnswer) {
                   
                  
                     if($valueQuestion[1] ==$valueAnswer[1] &&$valueQuestion[2] ==$valueAnswer[2] ){
                       $concatenatedString =''."$valueAnswer[0]".'-'."$valueQuestion[0]".'';   
                     }
-                  
-               //     echo $concatenatedString;
-           
-                   // Populate the array
-
-
-                   //idQuestionselectAnswer:id_cauHoi
-                   //idAnswerselectAnswer:id_dapan
                    $selectOptionUser[$idQuestionselectAnswer][$idAnswerselectAnswer] = $concatenatedString;
                }
            }
@@ -485,12 +448,9 @@ if (isset($_POST['btnNopBai'])){
                        $numberQuestionCorrect++;
                    }
                }
-           }
-           print_r($numberQuestionCorrect);
-          //  print_r($correctAnswersSelect);
+          }
            echo("<br>");
-          //    print_r($selectOptionUser);
-          //    echo("<br>");
+           echo '<script type="text/javascript">alert("Số câu đúng là:' . $numberQuestionCorrect . '");</script>';
           
           }
       

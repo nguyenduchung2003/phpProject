@@ -187,7 +187,7 @@ if (!isLogin()) {
         
  
           
-          <!-- <div class="alert-primary text-center p-2 position-absolute-bottom" style="margin-top: 15px;" role="alert">ProjectPHP - K71</div> -->
+          <div class="alert-primary text-center p-2 position-absolute-bottom" style="margin-top: 15px;" role="alert">ProjectPHP - K71</div>
 	</main>
 	
 </body>
@@ -214,7 +214,7 @@ if (!isLogin()) {
                               echo "Query error: " . mysqli_error($conn);
                           }
                     
-                         // $file_tai_len = "";
+                  
                          if (isset($_FILES['file_tai_len']) && $_FILES['file_tai_len']['error'] === 0) {
                              $file_tai_len = $_FILES['file_tai_len']['name'];
                              move_uploaded_file($_FILES['file_tai_len']['tmp_name'], 'uploads/' . $file_tai_len);
@@ -239,10 +239,10 @@ if (!isLogin()) {
                                    $soLuongDa = mysqli_num_rows($resultIds);
 
                                    for ($i = 1; $i <= $soLuongDa; $i++) {
-                                       // Fetch the current row
+                                     
                                        $row = mysqli_fetch_assoc($resultIds);
                                
-                                       // Check if there is a row
+                                       
                                        if ($row) {
                                            $dapAnValue = trim($_POST['dap_an_' . $i]);
                                            $checkDapAnValue = isset($_POST['check_dap_an_' . $i]) ? 1 : 0;
