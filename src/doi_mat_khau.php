@@ -59,26 +59,25 @@ if (!isLogin()) {
        $hashedPasswordOld = md5($OldPassword);
        $NewPassword = $_POST['NewPassword'];
        $hashedPassword = md5($NewPassword);
-     //   echo( $hashedPassword);
+    
        $NewPasswordConfirm = $_POST['NewPasswordConfirm'];
-     //   echo($_SESSION['user']['hashedPassword']);
-     //   echo($hashedPasswordOld);
+  
        if (!$OldPassword && !$NewPassword && !$NewPasswordConfirm) {
            echo '<script>alert("Bạn cần phải nhập đầy đủ các thông tin ");</script>';
        } elseif (!$OldPassword) {
           echo '<script>alert("Mật khẩu cũ không được để trống ");</script>';
-          //  echo '<p id = "error"> Tài khoản không được để trống </p>';
+       
        } elseif (!$NewPassword) {
           echo '<script>alert("Mật khẩu mới không được để trống ");</script>';
-          //  echo '<p id = "error"> Mật khẩu không được để trống </p>';
+        
        } elseif (!$NewPasswordConfirm) {
           echo '<script>alert("Mật khẩu nhập lại không được để trống");</script>';
-          //  echo '<p id = "error"> Mật khẩu nhập lại không được để trống </p>';
+          
        } elseif ($NewPasswordConfirm != $NewPassword) {
           echo '<script>alert("Mật khẩu mới không trùng nhau");</script>';
-          //  echo '<p id = "error"> Mật khẩu không trùng nhau </p>';
+      
        }
-       elseif( $_SESSION['user']['hashedPassword'] == $hashedPassword){
+       elseif( $OldPassword == $NewPassword){
           echo '<script>alert("Mật khẩu cũ không được  trùng mật khẩu mới");</script>';
        }
        else {
@@ -87,19 +86,21 @@ if (!isLogin()) {
           $sql_check = "SELECT * FROM account WHERE password = '" . $hashedPasswordOld . "' AND idUser = '" . $idUserNow . "'";
           
           $result =  mysqli_query($conn,$sql_check);
-
+          // $row = mysqli_fetch_assoc($result);
           if ($result && mysqli_num_rows($result) <= 0) {
-               echo '<script>alert("Mật khẩu cũ không chính xác");</script>';
-               // echo '<p id="error">Tài khoản đã tồn tại</p>'; 
-           }
-          else {
-
-               $sqlUpdate =  "UPDATE account
-                SET password='" .$hashedPassword . "'
-               WHERE password='" .$hashedPasswordOld . "' AND idUser = '" . $idUserNow . "'";
              
-               mysqli_query($conn,$sqlUpdate);
-               echo '<script>alert("Đổi mật khẩu thành công");</script>';
+              echo '<script>alert("Mật khẩu cũ không chính xác");</script>';
+               
+           }
+          
+          else {
+               
+                $sqlUpdate =  "UPDATE account
+                SET password='" .$hashedPassword . "'
+                WHERE password='" .$hashedPasswordOld . "' AND idUser = '" . $idUserNow . "'";
+             
+                mysqli_query($conn,$sqlUpdate);
+             echo '<script>alert("Đổi mật khẩu thành công");window.location.href = "khoa_hoc.php"</script>';
           }
        }
      }
