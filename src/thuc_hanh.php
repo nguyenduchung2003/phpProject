@@ -8,6 +8,13 @@ if (!isLogin()) {
 }
 if (session_status() == PHP_SESSION_NONE) {
      session_start();
+     if(!isset($_SESSION['QuestionCorrect'])){
+          $_SESSION['QuestionCorrect'] = [];
+     }
+     
+}
+else if (!isset($_GET['id_khoa_hoc'])) {
+     header('Location: khoa_hoc.php');
  }
 ?>
 <!DOCTYPE html>
@@ -83,7 +90,12 @@ if (session_status() == PHP_SESSION_NONE) {
           .answer{
                display: flex;
           }
-          
+       .incorrect-question {
+          color: red;
+       }
+       .correct-question {
+          color: green;
+       }
      </style>
 </head>
 <body>
@@ -92,7 +104,7 @@ if (session_status() == PHP_SESSION_NONE) {
           <?php
                   $a=  $_GET['id_khoa_hoc'];
                   if($a){
-                     global $conn;
+                global $conn;
                $sql ="SELECT * FROM khoahoc";
                $result =  mysqli_query($conn,$sql);
                if($result){
@@ -117,8 +129,197 @@ if (session_status() == PHP_SESSION_NONE) {
 
      <section>
           <form action="" method="POST">
-          <?php
+          <?php 
+         if (isset($_POST['btnNopBai'])){
+    
+   
+          global $conn;
+       
+               $numberQuestionCorrect = 0;
+   
+         
+              //CheckBox 
+              $printedAnswers = []; 
+              $selectedAnswersArray = [];
+              $correctAnswers = [];
+              foreach ($_POST as $key => $value) {
+               if (strpos($key, 'checkBoxAnswer') !== false) {
+                    $value = mysqli_real_escape_string($conn, $value);
+                    $parts = explode('_', $key);
+                    $idCauhoi = $parts[1];
+                    $idDapan = $parts[2];
+                  
+                    $selectedAnswersArray[$idCauhoi][] = $idDapan;    
+                    
+                    if (!isset($printedAnswers[$idCauhoi])) {
+                        
+                        $sql = "SELECT *
+                                 FROM cauhoi 
+                                   JOIN dapan ON cauhoi.id_cauhoi = dapan.id_cauhoi
+                                WHERE cauhoi.idKhoaHoc = $a 
+                                AND dapan.id_cauhoi = $idCauhoi AND  dapan.dapandung = 1 AND cauhoi.dangcauhoi = 'CheckBox'";
+            
+                        $result = mysqli_query($conn, $sql);
+            
+                        if (!$result) {
+                            echo "Error executing query: " . mysqli_error($conn);
+                        } else {
+                            
+                          
+                            while ($row = mysqli_fetch_assoc($result)) {
+                                $correctAnswers[$row['id_cauhoi']][] = $row['id_dapan'];
+                            }
+                           
+                            if (!isset($printedAnswers[$idCauhoi])) {
+                                $printedAnswers[$idCauhoi] = true; 
+                            }
+                            
+                        }
+                        $printedAnswers[$idCauhoi] = false;
+                        
+                        
+                    }
+                }
+             
+              }
+        
+              foreach ($correctAnswers as $idCauhoi => $correct) {
+               if (isset($selectedAnswersArray[$idCauhoi])) {
+                   if (array_diff($correct, $selectedAnswersArray[$idCauhoi]) === array_diff($selectedAnswersArray[$idCauhoi], $correct)) {
+                    
+                    $_SESSION['QuestionCorrect'][] = $idCauhoi;
+                       $numberQuestionCorrect++;
+                   }
+               }
+           }
+           
+  
+              //Điền
+              
+          foreach ($_POST as $key => $value) {
+               if (strpos($key, 'textAnswer') !== false) {
+                   $parts = explode('_', $key);
+                   $questionNumber = end($parts);
+           
+               
+                   $questionNumber = trim($questionNumber);
+                   $value = trim($value);
+
+                   $questionNumber = mysqli_real_escape_string($conn, $questionNumber);
+                   $value = mysqli_real_escape_string($conn, $value);
+                    
+                   $sql = "SELECT *
+                           FROM cauhoi 
+                           JOIN dapan ON cauhoi.id_cauhoi = dapan.id_cauhoi
+                           WHERE cauhoi.idKhoaHoc = $a 
+                               AND dapan.id_cauhoi = $questionNumber 
+                               AND dapan.dapan = '" . $value . "'"; 
+           
+                  
+                   $result = mysqli_query($conn, $sql);
+              
+                   if (!$result) {
+                       echo "Loi Error executing query: " . mysqli_error($conn);
+                   } else {
+                     
+                       if (mysqli_num_rows($result) > 0) {
+                         $row = mysqli_fetch_assoc($result);
+                         $_SESSION['QuestionCorrect'][] = $row['id_cauhoi'];
+                           $numberQuestionCorrect++;
+
+                       } else {
+                          echo "";
+                       }
+                   }
+               }
+           }
+           
+      
+
+
+              //  Select
+              $selectOptionQuestionArray = [];
+              $selectOptionAnswerArray = [];
+              $selectOptionUser = [];
+              $valueQuestion =[];
+              $valueAnswer =[];
+              $printedAnswersSelect = []; 
+              $correctAnswersSelect = [];
+              
+              foreach ($_POST as $key => $value) {
+              
+               if (strpos($key, 'selectQuestion') !== false) {
+                   $parts = explode('_', $key);
+
+                   $value = mysqli_real_escape_string($conn, $value);
+
+                   $valueQuestion = explode('_', $value);
+               
+                   $answerselectQuestion = $parts[1];
+                  
+                   $idQuestionselectQuestion = $parts[1];
+                   $idAnswerselectQuestion = $parts[2];
+               } elseif (strpos($key, 'selectAnswer') !== false) {
+                    $value = mysqli_real_escape_string($conn, $value);
+
+                 
+                   $valueAnswer = explode('_', $value);
+                  
+                   $parts = explode('_', $key);
+           
+                   $answerselectAnswer = $parts[0];
+                   $idQuestionselectAnswer = $parts[1];
+                   $idAnswerselectAnswer = $parts[2];
+                   
+               }
+
+              
+                       if(isset($idQuestionselectAnswer)){
+                         $sql = "SELECT *
+                         FROM cauhoi 
+                           JOIN dapan ON cauhoi.id_cauhoi = dapan.id_cauhoi
+                        WHERE cauhoi.idKhoaHoc = $a 
+                        AND dapan.id_cauhoi = $idQuestionselectAnswer AND  dapan.dapandung = 1 AND cauhoi.dangcauhoi = 'Select'";
+          
+                     $result = mysqli_query($conn, $sql);
+          
+                    if (!$result) {
+                    echo "Error executing query: " . mysqli_error($conn);
+                    } else {
+                    
+                  
+                     while ($row = mysqli_fetch_assoc($result)) {
+                          $correctAnswersSelect[$row['id_cauhoi']][$row['id_dapan']] = $row['dapan'];
+                      }
+                      
+                    
+                }
+                       }
+               if (isset($idAnswerselectQuestion, $idAnswerselectAnswer) && $idAnswerselectQuestion == $idAnswerselectAnswer) {
+                  
+                 
+                    if($valueQuestion[1] ==$valueAnswer[1] &&$valueQuestion[2] ==$valueAnswer[2] ){
+                      $concatenatedString =''."$valueAnswer[0]".'-'."$valueQuestion[0]".'';   
+                    }
+                   $selectOptionUser[$idQuestionselectAnswer][$idAnswerselectAnswer] = $concatenatedString;
+               }
+           }
+           foreach ($correctAnswersSelect as $idQuestionselectAnswer => $correct) {
+               if (isset($selectOptionUser[$idQuestionselectAnswer])) {
+                   if (array_diff($correct, $selectOptionUser[$idQuestionselectAnswer]) === array_diff($selectOptionUser[$idQuestionselectAnswer], $correct)) {
+                    
+                    $_SESSION['QuestionCorrect'][] = $idQuestionselectAnswer;
+                       $numberQuestionCorrect++;
+                   }
+               }
+          }
+           echo("<br>");
+           echo '<script type="text/javascript">alert("Số câu đúng là:' . $numberQuestionCorrect . '");</script>';
+         
+
+          }
                 global $conn;
+                 
                 $sql = "SELECT *
                         FROM cauhoi 
                         JOIN dapan ON cauhoi.id_cauhoi = dapan.id_cauhoi
@@ -136,7 +337,19 @@ if (session_status() == PHP_SESSION_NONE) {
                                         echo '<hr>'; 
                                    }
                                   
-                              echo '<div class="question">';
+                              // echo '<div class="question">';
+                              echo '<div class="question ';
+                      
+                           
+                              if (isset($_POST['btnNopBai']) && isset($_SESSION['QuestionCorrect']) && in_array($row['id_cauhoi'], $_SESSION['QuestionCorrect'])) {
+                               
+                                   echo 'correct-question'; 
+                              } elseif(isset($_POST['btnNopBai'])) {
+                             
+                                   echo 'incorrect-question'; 
+                              }
+                              
+                              echo '">';
                               
                                if (!empty($row['anh'])) {
                                    echo '<h3>';
@@ -166,9 +379,9 @@ if (session_status() == PHP_SESSION_NONE) {
                                    echo '<label>';
                                    echo '<input type="checkbox" name="checkBoxAnswer' . $checkBoxAnswer . '" value="' . $row['id_dapan'] . '" ';
                                
-                                   // Check if the checkbox value is present in the $_POST array
+                                   
                                    if (isset($_POST['checkBoxAnswer' . $checkBoxAnswer]) && $_POST['checkBoxAnswer' . $checkBoxAnswer] == $row['id_dapan']) {
-                                        echo 'checked'; // Set the checked attribute
+                                        echo 'checked'; 
                                     }
                                
                                    echo '> ' . $row['dapan'];
@@ -259,7 +472,15 @@ if (session_status() == PHP_SESSION_NONE) {
           ?>
         
                     <div class="text-center">
-                    <input type="submit" name="btnNopBai" value="Nộp bài" class="btn btn-primary"/> 
+                    <?php
+                    
+                    ?>
+                    <input type="submit" name="btnNopBai" value="Nộp bài" class="btn btn-primary" <?php 
+             
+                    echo isset($_POST['btnNopBai']) ? 'disabled' : ''; ?> 
+                    />
+
+                
                     </div>
                  
       
@@ -273,186 +494,197 @@ if (session_status() == PHP_SESSION_NONE) {
 </body>
 <?php
    
-if (isset($_POST['btnNopBai'])){
-  
-          global $conn;
-               $numberQuestionCorrect = 0;
+// if (isset($_POST['btnNopBai'])){
+    
+   
+//           global $conn;
+       
+//                $numberQuestionCorrect = 0;
    
          
-              //CheckBox 
-              $printedAnswers = []; 
-              $selectedAnswersArray = [];
-              $correctAnswers = [];
-              foreach ($_POST as $key => $value) {
-               if (strpos($key, 'checkBoxAnswer') !== false) {
-                    $value = mysqli_real_escape_string($conn, $value);
-                    $parts = explode('_', $key);
-                    $idCauhoi = $parts[1];
-                    $idDapan = $parts[2];
+//               //CheckBox 
+//               $printedAnswers = []; 
+//               $selectedAnswersArray = [];
+//               $correctAnswers = [];
+//               foreach ($_POST as $key => $value) {
+//                if (strpos($key, 'checkBoxAnswer') !== false) {
+//                     $value = mysqli_real_escape_string($conn, $value);
+//                     $parts = explode('_', $key);
+//                     $idCauhoi = $parts[1];
+//                     $idDapan = $parts[2];
                   
-                    $selectedAnswersArray[$idCauhoi][] = $idDapan;    
+//                     $selectedAnswersArray[$idCauhoi][] = $idDapan;    
                     
-                    if (!isset($printedAnswers[$idCauhoi])) {
+//                     if (!isset($printedAnswers[$idCauhoi])) {
                         
-                        $sql = "SELECT *
-                                 FROM cauhoi 
-                                   JOIN dapan ON cauhoi.id_cauhoi = dapan.id_cauhoi
-                                WHERE cauhoi.idKhoaHoc = $a 
-                                AND dapan.id_cauhoi = $idCauhoi AND  dapan.dapandung = 1 AND cauhoi.dangcauhoi = 'CheckBox'";
+//                         $sql = "SELECT *
+//                                  FROM cauhoi 
+//                                    JOIN dapan ON cauhoi.id_cauhoi = dapan.id_cauhoi
+//                                 WHERE cauhoi.idKhoaHoc = $a 
+//                                 AND dapan.id_cauhoi = $idCauhoi AND  dapan.dapandung = 1 AND cauhoi.dangcauhoi = 'CheckBox'";
             
-                        $result = mysqli_query($conn, $sql);
+//                         $result = mysqli_query($conn, $sql);
             
-                        if (!$result) {
-                            echo "Error executing query: " . mysqli_error($conn);
-                        } else {
+//                         if (!$result) {
+//                             echo "Error executing query: " . mysqli_error($conn);
+//                         } else {
                             
                           
-                            while ($row = mysqli_fetch_assoc($result)) {
-                                $correctAnswers[$row['id_cauhoi']][] = $row['id_dapan'];
-                            }
+//                             while ($row = mysqli_fetch_assoc($result)) {
+//                                 $correctAnswers[$row['id_cauhoi']][] = $row['id_dapan'];
+//                             }
                            
-                            if (!isset($printedAnswers[$idCauhoi])) {
-                                $printedAnswers[$idCauhoi] = true; 
-                            }
+//                             if (!isset($printedAnswers[$idCauhoi])) {
+//                                 $printedAnswers[$idCauhoi] = true; 
+//                             }
                             
-                        }
-                        $printedAnswers[$idCauhoi] = false;
+//                         }
+//                         $printedAnswers[$idCauhoi] = false;
                         
                         
-                    }
-                }
+//                     }
+//                 }
              
-              }
+//               }
         
-              foreach ($correctAnswers as $idCauhoi => $correct) {
-               if (isset($selectedAnswersArray[$idCauhoi])) {
-                   if (array_diff($correct, $selectedAnswersArray[$idCauhoi]) === array_diff($selectedAnswersArray[$idCauhoi], $correct)) {
-       
-                       $numberQuestionCorrect++;
-                   }
-               }
-           }
+//               foreach ($correctAnswers as $idCauhoi => $correct) {
+//                if (isset($selectedAnswersArray[$idCauhoi])) {
+//                    if (array_diff($correct, $selectedAnswersArray[$idCauhoi]) === array_diff($selectedAnswersArray[$idCauhoi], $correct)) {
+                    
+//                     $_SESSION['QuestionCorrect'][] = $idCauhoi;
+//                        $numberQuestionCorrect++;
+//                    }
+//                }
+//            }
            
   
-              //Điền
+//               //Điền
               
-          foreach ($_POST as $key => $value) {
-               if (strpos($key, 'textAnswer') !== false) {
-                   $parts = explode('_', $key);
-                   $questionNumber = end($parts);
+//           foreach ($_POST as $key => $value) {
+//                if (strpos($key, 'textAnswer') !== false) {
+//                    $parts = explode('_', $key);
+//                    $questionNumber = end($parts);
            
                
-                   $questionNumber = trim($questionNumber);
-                   $value = trim($value);
+//                    $questionNumber = trim($questionNumber);
+//                    $value = trim($value);
 
-                   $questionNumber = mysqli_real_escape_string($conn, $questionNumber);
-                   $value = mysqli_real_escape_string($conn, $value);
+//                    $questionNumber = mysqli_real_escape_string($conn, $questionNumber);
+//                    $value = mysqli_real_escape_string($conn, $value);
                     
-                   $sql = "SELECT *
-                           FROM cauhoi 
-                           JOIN dapan ON cauhoi.id_cauhoi = dapan.id_cauhoi
-                           WHERE cauhoi.idKhoaHoc = $a 
-                               AND dapan.id_cauhoi = $questionNumber 
-                               AND dapan.dapan = '" . $value . "'"; 
+//                    $sql = "SELECT *
+//                            FROM cauhoi 
+//                            JOIN dapan ON cauhoi.id_cauhoi = dapan.id_cauhoi
+//                            WHERE cauhoi.idKhoaHoc = $a 
+//                                AND dapan.id_cauhoi = $questionNumber 
+//                                AND dapan.dapan = '" . $value . "'"; 
            
                   
-                   $result = mysqli_query($conn, $sql);
+//                    $result = mysqli_query($conn, $sql);
               
-                   if (!$result) {
-                       echo "Loi Error executing query: " . mysqli_error($conn);
-                   } else {
+//                    if (!$result) {
+//                        echo "Loi Error executing query: " . mysqli_error($conn);
+//                    } else {
                      
-                       if (mysqli_num_rows($result) > 0) {
-                           $numberQuestionCorrect++;
-                       } else {
-                          echo "";
-                       }
-                   }
-               }
-           }
+//                        if (mysqli_num_rows($result) > 0) {
+//                          $row = mysqli_fetch_assoc($result);
+//                          $_SESSION['QuestionCorrect'][] = $row['id_cauhoi'];
+//                            $numberQuestionCorrect++;
+
+//                        } else {
+//                           echo "";
+//                        }
+//                    }
+//                }
+//            }
            
       
 
 
-              //  Select
-              $selectOptionQuestionArray = [];
-              $selectOptionAnswerArray = [];
-              $selectOptionUser = [];
-              $valueQuestion =[];
-              $valueAnswer =[];
-              $printedAnswersSelect = []; 
-              $correctAnswersSelect = [];
+//               //  Select
+//               $selectOptionQuestionArray = [];
+//               $selectOptionAnswerArray = [];
+//               $selectOptionUser = [];
+//               $valueQuestion =[];
+//               $valueAnswer =[];
+//               $printedAnswersSelect = []; 
+//               $correctAnswersSelect = [];
               
-              foreach ($_POST as $key => $value) {
+//               foreach ($_POST as $key => $value) {
               
-               if (strpos($key, 'selectQuestion') !== false) {
-                   $parts = explode('_', $key);
+//                if (strpos($key, 'selectQuestion') !== false) {
+//                    $parts = explode('_', $key);
 
-                   $value = mysqli_real_escape_string($conn, $value);
+//                    $value = mysqli_real_escape_string($conn, $value);
 
-                   $valueQuestion = explode('_', $value);
+//                    $valueQuestion = explode('_', $value);
                
-                   $answerselectQuestion = $parts[1];
+//                    $answerselectQuestion = $parts[1];
                   
-                   $idQuestionselectQuestion = $parts[1];
-                   $idAnswerselectQuestion = $parts[2];
-               } elseif (strpos($key, 'selectAnswer') !== false) {
-                    $value = mysqli_real_escape_string($conn, $value);
+//                    $idQuestionselectQuestion = $parts[1];
+//                    $idAnswerselectQuestion = $parts[2];
+//                } elseif (strpos($key, 'selectAnswer') !== false) {
+//                     $value = mysqli_real_escape_string($conn, $value);
 
                  
-                   $valueAnswer = explode('_', $value);
+//                    $valueAnswer = explode('_', $value);
                   
-                   $parts = explode('_', $key);
+//                    $parts = explode('_', $key);
            
-                   $answerselectAnswer = $parts[0];
-                   $idQuestionselectAnswer = $parts[1];
-                   $idAnswerselectAnswer = $parts[2];
+//                    $answerselectAnswer = $parts[0];
+//                    $idQuestionselectAnswer = $parts[1];
+//                    $idAnswerselectAnswer = $parts[2];
                    
-               }
+//                }
 
               
-                       if(isset($idQuestionselectAnswer)){
-                         $sql = "SELECT *
-                         FROM cauhoi 
-                           JOIN dapan ON cauhoi.id_cauhoi = dapan.id_cauhoi
-                        WHERE cauhoi.idKhoaHoc = $a 
-                        AND dapan.id_cauhoi = $idQuestionselectAnswer AND  dapan.dapandung = 1 AND cauhoi.dangcauhoi = 'Select'";
+//                        if(isset($idQuestionselectAnswer)){
+//                          $sql = "SELECT *
+//                          FROM cauhoi 
+//                            JOIN dapan ON cauhoi.id_cauhoi = dapan.id_cauhoi
+//                         WHERE cauhoi.idKhoaHoc = $a 
+//                         AND dapan.id_cauhoi = $idQuestionselectAnswer AND  dapan.dapandung = 1 AND cauhoi.dangcauhoi = 'Select'";
           
-                     $result = mysqli_query($conn, $sql);
+//                      $result = mysqli_query($conn, $sql);
           
-                    if (!$result) {
-                    echo "Error executing query: " . mysqli_error($conn);
-                    } else {
+//                     if (!$result) {
+//                     echo "Error executing query: " . mysqli_error($conn);
+//                     } else {
                     
                   
-                     while ($row = mysqli_fetch_assoc($result)) {
-                          $correctAnswersSelect[$row['id_cauhoi']][$row['id_dapan']] = $row['dapan'];
-                      }
+//                      while ($row = mysqli_fetch_assoc($result)) {
+//                           $correctAnswersSelect[$row['id_cauhoi']][$row['id_dapan']] = $row['dapan'];
+//                       }
                       
                     
-                }
-                       }
-               if (isset($idAnswerselectQuestion, $idAnswerselectAnswer) && $idAnswerselectQuestion == $idAnswerselectAnswer) {
+//                 }
+//                        }
+//                if (isset($idAnswerselectQuestion, $idAnswerselectAnswer) && $idAnswerselectQuestion == $idAnswerselectAnswer) {
                   
                  
-                    if($valueQuestion[1] ==$valueAnswer[1] &&$valueQuestion[2] ==$valueAnswer[2] ){
-                      $concatenatedString =''."$valueAnswer[0]".'-'."$valueQuestion[0]".'';   
-                    }
-                   $selectOptionUser[$idQuestionselectAnswer][$idAnswerselectAnswer] = $concatenatedString;
-               }
-           }
-           foreach ($correctAnswersSelect as $idQuestionselectAnswer => $correct) {
-               if (isset($selectOptionUser[$idQuestionselectAnswer])) {
-                   if (array_diff($correct, $selectOptionUser[$idQuestionselectAnswer]) === array_diff($selectOptionUser[$idQuestionselectAnswer], $correct)) {
-       
-                       $numberQuestionCorrect++;
-                   }
-               }
-          }
-           echo("<br>");
-           echo '<script type="text/javascript">alert("Số câu đúng là:' . $numberQuestionCorrect . '");</script>';
-          
-          }
+//                     if($valueQuestion[1] ==$valueAnswer[1] &&$valueQuestion[2] ==$valueAnswer[2] ){
+//                       $concatenatedString =''."$valueAnswer[0]".'-'."$valueQuestion[0]".'';   
+//                     }
+//                    $selectOptionUser[$idQuestionselectAnswer][$idAnswerselectAnswer] = $concatenatedString;
+//                }
+//            }
+//            foreach ($correctAnswersSelect as $idQuestionselectAnswer => $correct) {
+//                if (isset($selectOptionUser[$idQuestionselectAnswer])) {
+//                    if (array_diff($correct, $selectOptionUser[$idQuestionselectAnswer]) === array_diff($selectOptionUser[$idQuestionselectAnswer], $correct)) {
+                    
+//                     $_SESSION['QuestionCorrect'][] = $idQuestionselectAnswer;
+//                        $numberQuestionCorrect++;
+//                    }
+//                }
+//           }
+//            echo("<br>");
+//            echo '<script type="text/javascript">alert("Số câu đúng là:' . $numberQuestionCorrect . '");</script>';
+//           print_r($_SESSION['QuestionCorrect']);
+//           echo '  <script type="text/javascript">
+//                                             window.location.href = "thuc_hanh.php?id_khoa_hoc='.$_GET['id_khoa_hoc'].'";
+//                                         </script>';
+
+//           }
       
        ?>  
 </html>

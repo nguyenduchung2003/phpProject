@@ -12,10 +12,12 @@ session_start();
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
              Tài khoản 
-             <?php echo $_SESSION['user']['username'];
-             ?>
+             <?php echo $_SESSION['user']['username'];?>
+             
           </a>
           <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+          <?php echo $_SESSION['user']['role'] == "admin" ? '<li><a class="dropdown-item" href="quan_li_tk.php">Quản lí tài khoản</a></li>' : ''; ?>
+
           <li><a class="dropdown-item" href="doi_mat_khau.php">Đổi mật khẩu</a></li>
            <li><a class="dropdown-item" href="dang_xuat.php">Đăng xuất</a></li>
           </ul>

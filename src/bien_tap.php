@@ -10,6 +10,9 @@ if (!isLogin()) {
 if (session_status() == PHP_SESSION_NONE) {
      session_start();
  }
+ else if (!isset($_GET['id_khoa_hoc'])) {
+     header('Location: khoa_hoc.php');
+ }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -199,15 +202,21 @@ if (session_status() == PHP_SESSION_NONE) {
                              
                              if ($_SESSION["user"]["role"] == "admin" && $row['trangthai'] != 1) {
                                  echo '<input class="btn btn-success" type="submit" name="actionApprove" value="Duyệt" />';
-                                 
+                                 echo '<input class="btn btn-danger" type="submit" name="actionDelete" value="Xóa"/>';
                              }
+                             if ($_SESSION["user"]["role"] == "admin" && $row['trangthai'] == 1) {
+                             
+                              echo '<input class="btn btn-danger" type="submit" name="actionDelete" value="Xóa"/>';
+                               }
                              if ( $row['trangthai'] != 1) {
-                           
                                echo '<input class="btn btn-secondary" type="submit" name="actionUpdate" value="Update"/>';
-                          }
+                               }
+                               if($row['trangthai'] != 1 && $_SESSION["user"]["role"] != "admin"){
+                                   echo '<input class="btn btn-danger" type="submit" name="actionDelete" value="Xóa"/>';
+                               }
                             
                          //     echo '<a href="xem_truoc.php" class="btn btn-secondary">Update</a>';
-                             echo '<input class="btn btn-danger" type="submit" name="actionDelete" value="Xóa"/>';
+                            
                              echo '</form>';
                              echo '</td>';
                              $stt++;

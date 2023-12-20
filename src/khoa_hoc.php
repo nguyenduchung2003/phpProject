@@ -1,5 +1,12 @@
+
+
 <?php include("../connectdb.php"); ?>
-<?php include 'navbar.php';?>
+<?php include 'navbar.php';
+     if(isset($_SESSION['QuestionCorrect'])){
+          $_SESSION['QuestionCorrect'] = [];
+     }
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

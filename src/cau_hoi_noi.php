@@ -104,9 +104,14 @@
                             move_uploaded_file($_FILES['file_tai_len']['tmp_name'], 'uploads/' . $file_tai_len);
                         }
                     
-                        if (empty($ten_cau_hoi) || empty($soLuongDa)) {
+                        if (empty($ten_cau_hoi) || empty($soLuongDa) ) {
                             echo ('<div class="alert alert-warning text-center" role="alert">Thêm câu hỏi thất bại</div>');
-                        } else {
+                        } 
+                        else if (!isset($_POST['slda'])){
+                         echo ('<div class="alert alert-warning text-center" role="alert">Thêm câu hỏi thất bại chưa xác nhận số lượng câu</div>');
+
+                        }
+                        else {
                             $sql = "INSERT INTO cauhoi (cauhoi, anh, dangcauhoi, trangthai, idUser, idKhoaHoc)
                                     VALUES ('" . $ten_cau_hoi . "','" . $file_tai_len . "','" . $dang_cau_hoi . "','" . $trangthai . "','" . $_SESSION["user"]["id"] . "','" . $a . "')";
                             $result = mysqli_query($conn, $sql);
@@ -117,12 +122,16 @@
                                 // Get the last inserted ID
                                 $lastIdQuery = "SELECT MAX(id_cauhoi) AS LastId FROM cauhoi";
                                 $resultIds = mysqli_query($conn, $lastIdQuery);
-                    
+                                   $check = false;
                                 if ($resultIds) {
                                     $row = mysqli_fetch_assoc($resultIds);
                                     $lastId = $row['LastId'];
-                                    
+                                  
                                     for ($i = 1; $i <= $soLuongDa; $i++) {
+                                        if(!isset($_POST['dap_an_' . $i]) || !isset($_POST['cau_hoi_' . $i]) ){
+                                            $check = true;
+                                            break;
+                                        }
                                         $dapAnValue = $_POST['dap_an_' . $i];
                                         $cauHoiValue = $_POST['cau_hoi_' . $i];
                                         $dapAnCorrect = trim($dapAnValue . "-" . $cauHoiValue);
@@ -136,13 +145,22 @@
                                             echo "Lỗi dap an: " . mysqli_error($conn);
                                         }
                                     }
-                                    echo ('<div class="alert alert-success text-center" role="alert">Thêm câu hỏi thành công</div>');
+                                    if($check == true) {
+                                        echo ('<div class="alert alert-warning text-center" role="alert">Thêm câu hỏi thất bại chưa xác nhận số lượng câu</div>');
+
+                                    }
+                                    else {
+                                        echo ('<div class="alert alert-success text-center" role="alert">Thêm câu hỏi thành công</div>');
+
+                                    }
                                 } else {
                                     echo "Lỗi truy vấn id max: " . mysqli_error($conn);
                                 }
                             }
                         }
                     }
+
+                   
 
 
 

@@ -11,7 +11,7 @@ if (!isLogin()) {
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Khóa học</title>
+	<title>Xem trước</title>
 	<!-- Begin bootstrap cdn -->
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="	sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
@@ -83,6 +83,11 @@ if (!isLogin()) {
                         $stt = 1;
                 
                         $questionRow = mysqli_fetch_array($result);
+                  
+                        if($questionRow['dangcauhoi'] == "Select"){
+                         echo ('<div class="alert alert-warning text-center" role="alert">Vui lòng sửa đáp án theo cú pháp đáp án - câu hỏi</div>');
+
+                        }
                         echo '<tr>';
                         echo '<td>';
                         if ($checkUpdate == "true") {
@@ -103,7 +108,8 @@ if (!isLogin()) {
                               
                               echo '  <tr>
                     
-                              <th>Đáp án</th>               
+                              <th>Đáp án</th> 
+
                                  </tr>';
                                   $i = 1;
                                   mysqli_data_seek($result, 0);
@@ -154,26 +160,7 @@ if (!isLogin()) {
                 
                         echo '</td>';
                         echo '</tr>';
-                    //     echo "<th>Đáp án</th>";
-                    //     $i = 1;
-                    //     mysqli_data_seek($result, 0);
-                    //     while ($row = mysqli_fetch_array($result)) {
-                              
-                    //         echo '<tr>';
-                    //         echo '<td>';
-                    //         if ($checkUpdate == "true") {
-                    //           echo '<input type="text" name="dap_an_' . $i . '" value="' . $row["dapan"] . '" />';
-                    //           echo '<input type="checkbox" ' . (($row['dapandung'] == 1) ? 'checked' : '') . ' name="check_dap_an_' . $i . '" value="' . $row['id_dapan'] . '">';
-                    //         }
-                    //          else {
-                    //             echo '<input disabled type="checkbox" ' . (($row['dapandung'] == 1) ? 'checked' : '') . ' name="answer[]" value="' . $row['id_dapan'] . '">';
-                    //         }
-                
-                    //         echo 'Đáp án  : ' . $row['dapan'];
-                    //         echo '</td>';
-                    //         echo '</tr>';
-                    //         $i++;
-                    //     }
+               
                     } else {
                         echo '<tr><td colspan="2">Không có câu hỏi nào</td></tr>';
                     }
@@ -232,18 +219,22 @@ if (!isLogin()) {
                                  echo "Lỗi insert cauhoi: " . mysqli_error($conn);
                              } else {
                                
-                                 $lastIdQuery = "SELECT * FROM dapan WHERE id_cauhoi='" . $id_cauhoi . "'";
+                                 $lastIdQuery = "SELECT * FROM dapan
+                                   JOIN cauhoi ON cauhoi.id_cauhoi = dapan.id_cauhoi
+                                   WHERE dapan.id_cauhoi='" . $id_cauhoi . "'";
                                  $resultIds = mysqli_query($conn, $lastIdQuery);
-                               
+                             
                                  if ($resultIds) {
                                    $soLuongDa = mysqli_num_rows($resultIds);
-
+                                  
                                    for ($i = 1; $i <= $soLuongDa; $i++) {
                                      
                                        $row = mysqli_fetch_assoc($resultIds);
-                               
+                                     
                                        
                                        if ($row) {
+                                       print_r($row);
+                                      
                                            $dapAnValue = trim($_POST['dap_an_' . $i]);
                                            $checkDapAnValue = isset($_POST['check_dap_an_' . $i]) ? 1 : 0;
                                
@@ -260,10 +251,16 @@ if (!isLogin()) {
                                            echo "Không có đủ dữ liệu để cập nhật.";
                                        }
                                    }
-                                   echo ('<div class="alert alert-success text-center" role="alert">Sửa câu hỏi thành công</div>');
-                                 } else {
+                                   echo '<script>alert("Sửa câu hỏi thành công");</script>';
+                                   
+
+                                  
+                                 } 
+                                 
+                                 else {
                                      echo "Lỗi truy vấn id max: " . mysqli_error($conn);
                                  }
+                                 
                              }
                          }
                      }

@@ -48,6 +48,7 @@
            return $check;
 		// hàm kiểm tra tài khoản nhập đã đúng chưa
 	}
+     
 //  }
     
     // end checkLogin
